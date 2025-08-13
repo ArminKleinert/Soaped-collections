@@ -143,6 +143,17 @@ class PersistentHashMapTest {
             mapOf(1 to 2, 2 to 3, 3 to 4),
             PersistentHashMap(mapOf(1 to 2)).assoc(2, 3).assoc(3, 4)
         )
+
+        val oldMap = PersistentHashMap(listOf(1 to 2, 2 to 3, 3 to 4))
+        val newMap = oldMap.assoc(5, 6)
+        Assertions.assertNotSame(oldMap,newMap)
+        Assertions.assertEquals(mapOf(1 to 2, 2 to 3, 3 to 4, 5 to 6),newMap)
+        Assertions.assertEquals(mapOf(1 to 2, 2 to 3, 3 to 4),oldMap)
+
+        val newMap2 = oldMap.assoc(1, 3)
+        Assertions.assertNotSame(oldMap,newMap2)
+        Assertions.assertEquals(mapOf(1 to 3, 2 to 3, 3 to 4),newMap2)
+        Assertions.assertEquals(mapOf(1 to 2, 2 to 3, 3 to 4),oldMap)
     }
 
     @Test
