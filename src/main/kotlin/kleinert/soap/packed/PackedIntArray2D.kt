@@ -28,7 +28,7 @@ class PackedIntArray2D private constructor(private val packed: IntArray, val num
         }
 
         fun invoke(numSubArrays: Int, subArraySize: Int, fill: Int = 0): PackedIntArray2D {
-            val packed = PackedIntArray2D(IntArray(numSubArrays * subArraySize), numSubArrays)
+            val packed = PackedIntArray2D(IntArray(numSubArrays * subArraySize) {fill}, numSubArrays)
             return packed
         }
     }
