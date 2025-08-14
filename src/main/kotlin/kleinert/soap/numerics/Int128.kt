@@ -88,15 +88,40 @@ data class Int128(val high: Long, val low: Long) : Comparable<Int128>, Number() 
 
     fun bitCount(): Int = high.countOneBits() + low.countOneBits()
 
-    operator fun plus(other: Int128): Int128 = Int128(high+ other.high, low+other.low)
     operator fun plus(other: Long): Int128 = plus(valueOf(other))
     operator fun plus(other: Int): Int128 = plus(valueOf(other))
     operator fun plus(other: BigInteger): Int128 = plus(valueOf(other))
+    operator fun plus(other: Int128): Int128 {
+        var sumHigh = high+other.high
+        val sumLow = low + other.low
+        if (sumLow < low) sumHigh += 1
+        return Int128(sumHigh, sumLow)
+    }
+    fun plusExact(other: Int128): Int128 {
+        var sumHigh = high+other.high
+        val sumLow = low + other.low
+        if (sumLow < low) sumHigh += 1
+        if (sumHigh <high) throw IllegalStateException()
+        return Int128(sumHigh, sumLow)
+    }
 
-    operator fun minus(other: Int128): Int128 = Int128(high-other.high, low- other.low)
+    /*
+    PairInt128 subtract_128_bits(int64_t a_high, int64_t a_low, int64_t b_high, int64_t b_low) {
+        int64_t borrow = a_low < b_low;
+        int64_t diff_low = a_low - b_low - borrow;
+        int64_t diff_high = a_high - b_high - (borrow ? 1 : 0);
+        return (PairInt128){diff_high, diff_low};
+    }
+     */
     operator fun minus(other: Long): Int128 = minus(valueOf(other))
     operator fun minus(other: Int): Int128 = minus(valueOf(other))
     operator fun minus(other: BigInteger): Int128 = minus(valueOf(other))
+    operator fun minus(other: Int128): Int128 {
+        val borrow = if (low < other.low) 1 else 0
+        val diffLow = low - other.low - borrow
+        val diffHigh = high - other.high - borrow
+        return Int128(diffHigh, diffLow)
+    }
 
     operator fun times(other: Int128): Int128 = TODO()
     operator fun times(other: Long): Int128 = times(valueOf(other))

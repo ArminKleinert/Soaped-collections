@@ -2,7 +2,7 @@ package kleinert.soap.packed
 
 import java.util.*
 
-class PackedIntArray2D private constructor(private val packed: IntArray, val numSubArrays: Int) :
+class PackedIntArray2D private constructor(private val packed: IntArray, private val numSubArrays: Int) :
     AbstractList<MutableList<Int>>(), RandomAccess {
     override val size: Int
         get() = numSubArrays
@@ -28,8 +28,7 @@ class PackedIntArray2D private constructor(private val packed: IntArray, val num
         }
 
         fun invoke(numSubArrays: Int, subArraySize: Int, fill: Int = 0): PackedIntArray2D {
-            val packed = PackedIntArray2D(IntArray(numSubArrays * subArraySize) {fill}, numSubArrays)
-            return packed
+            return PackedIntArray2D(IntArray(numSubArrays * subArraySize) { fill }, numSubArrays)
         }
     }
 
