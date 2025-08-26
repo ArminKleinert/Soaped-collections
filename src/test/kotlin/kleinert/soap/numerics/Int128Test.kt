@@ -18,11 +18,11 @@ class Int128Test {
 
     @Test
     fun equals() {
-        Assertions.assertTrue(Int128.ZERO == Int128.valueOf(0L, 0L))
-        Assertions.assertTrue(Int128.ONE == Int128.valueOf(0L, 1L))
-        Assertions.assertTrue(Int128.ONE != Int128.valueOf(0L, 0L))
-        Assertions.assertTrue(Int128.MAX_VALUE == Int128(Long.MAX_VALUE, -0x1L))
-        Assertions.assertTrue(Int128.MIN_VALUE == Int128(Long.MIN_VALUE, 0x0000000000000000L))
+        Assertions.assertTrue(Int128.ZERO == Int128.valueOf(0uL, 0uL))
+        Assertions.assertTrue(Int128.ONE == Int128.valueOf(0uL, 1uL))
+        Assertions.assertTrue(Int128.ONE != Int128.valueOf(0uL, 0uL))
+        Assertions.assertTrue(Int128.MAX_VALUE == Int128(Long.MAX_VALUE.toULong(), ULong.MAX_VALUE))
+        Assertions.assertTrue(Int128.MIN_VALUE == Int128(Long.MIN_VALUE.toULong(), 0uL))
     }
 
     @Test
@@ -114,28 +114,60 @@ class Int128Test {
 
     @Test
     fun bitCount() {
-        Assertions.assertEquals(0, Int128.ZERO.numberOfTrailingZeros())
-        Assertions.assertEquals(1, Int128.ONE.numberOfTrailingZeros())
-        Assertions.assertEquals(127, Int128.MAX_VALUE.numberOfTrailingZeros())
-        Assertions.assertEquals(128, Int128.MIN_VALUE.numberOfTrailingZeros())
+        Assertions.assertEquals(0, Int128.ZERO.countOneBits())
+        Assertions.assertEquals(1, Int128.ONE.countOneBits())
+        Assertions.assertEquals(127, Int128.MAX_VALUE.countOneBits())
+        Assertions.assertEquals(128, Int128.MIN_VALUE.countOneBits())
 
-        Assertions.assertEquals(1, Int128.valueOf(2L).numberOfTrailingZeros())
-        Assertions.assertEquals(1, Int128.valueOf(3L).numberOfTrailingZeros())
+        Assertions.assertEquals(1, Int128.valueOf(2L).countOneBits())
+        Assertions.assertEquals(1, Int128.valueOf(3L).countOneBits())
     }
 
     @Test
     fun plusInt128() {
-        TODO()
+        Assertions.assertEquals(            Int128.ZERO, Int128.ZERO+Int128.ZERO)
+        Assertions.assertEquals(            Int128.ONE, Int128.ZERO+Int128.ONE)
+        Assertions.assertEquals(            Int128.ONE, Int128.ONE+Int128.ZERO)
+        Assertions.assertEquals(            Int128(1uL, 0uL), Int128(0uL, ULong.MAX_VALUE)+Int128.ONE)
+        Assertions.assertEquals(            Int128(1uL, 0uL), Int128.ONE+Int128(0uL, ULong.MAX_VALUE))
+        Assertions.assertEquals(            Int128(0uL, 0uL), Int128.MAX_VALUE+Int128.ONE)
     }
 
     @Test
     fun testPlusLong() {
-        TODO()
+        Assertions.assertEquals(            Int128.ZERO, Int128.ZERO+0L)
+        Assertions.assertEquals(            Int128.ONE, Int128.ZERO+1L)
+        Assertions.assertEquals(            Int128.ONE, Int128.ONE+0L)
+        Assertions.assertEquals(            Int128(1uL, 0uL), Int128(0uL, ULong.MAX_VALUE)+1L)
+        Assertions.assertEquals(            Int128(0uL, 0uL), Int128.MAX_VALUE+1L)
     }
 
     @Test
     fun testPlusInt() {
-        TODO()
+        Assertions.assertEquals(            Int128.ZERO, Int128.ZERO+0)
+        Assertions.assertEquals(            Int128.ONE, Int128.ZERO+1)
+        Assertions.assertEquals(            Int128.ONE, Int128.ONE+0)
+        Assertions.assertEquals(            Int128(1uL, 0uL), Int128(0uL, ULong.MAX_VALUE)+1)
+        Assertions.assertEquals(            Int128(0uL, 0uL), Int128.MAX_VALUE+1u)
+    }
+
+    @Test
+    fun testPlusUInt() {
+        Assertions.assertEquals(            Int128.ZERO, Int128.ZERO+0u)
+        Assertions.assertEquals(            Int128.ONE, Int128.ZERO+1u)
+        Assertions.assertEquals(            Int128.ONE, Int128.ONE+0u)
+        Assertions.assertEquals(            Int128(1uL, 0uL), Int128(0uL, ULong.MAX_VALUE)+1L)
+        Assertions.assertEquals(            Int128(0uL, 0uL), Int128.MAX_VALUE+1u)
+    }
+
+    @Test
+    fun testPlusULong() {
+        Assertions.assertEquals(            Int128.ZERO, Int128.ZERO+0L)
+        Assertions.assertEquals(            Int128.ONE, Int128.ZERO+1L)
+        Assertions.assertEquals(            Int128.ONE, Int128.ONE+0L)
+        Assertions.assertEquals(            Int128(1uL, 0uL), Int128(0uL, ULong.MAX_VALUE)+1L)
+        Assertions.assertEquals(            Int128(1uL, 0uL), Int128.ONE+ULong.MAX_VALUE)
+        Assertions.assertEquals(            Int128(0uL, 0uL), Int128.MAX_VALUE+1uL)
     }
 
     @Test
@@ -227,16 +259,16 @@ class Int128Test {
     fun increment() {
         Assertions.assertEquals(Int128.ONE, Int128.ZERO.increment())
         Assertions.assertEquals(Int128.valueOf(2L), Int128.ONE.increment())
-        Assertions.assertEquals(Int128.valueOf(1L, 1L), Int128.valueOf(1L, 0L).increment())
+        Assertions.assertEquals(Int128.valueOf(1uL, 1uL), Int128.valueOf(1uL, 0uL).increment())
         Assertions.assertEquals(Int128.MIN_VALUE, Int128.MAX_VALUE.increment()) // TODO check
     }
 
     @Test
     fun decrement() {
-        Assertions.assertEquals(Int128.ZERO, Int128.ONE.increment())
-        Assertions.assertEquals(Int128.ONE, Int128.valueOf(2L).increment())
-        Assertions.assertEquals(Int128.valueOf(1L, 0L), Int128.valueOf(1L, 1L).increment())
-        Assertions.assertEquals(Int128.MAX_VALUE, Int128.MIN_VALUE.increment()) // TODO check
+        Assertions.assertEquals(Int128.ZERO, Int128.ONE.decrement())
+        Assertions.assertEquals(Int128.ONE, Int128.valueOf(2L).decrement())
+        Assertions.assertEquals(Int128.valueOf(1uL, 0uL), Int128.valueOf(1uL, 1uL).decrement())
+        Assertions.assertEquals(Int128.MAX_VALUE, Int128.MIN_VALUE.decrement()) // TODO check
     }
 
     @Test
@@ -245,8 +277,8 @@ class Int128Test {
         Assertions.assertEquals(1.toByte(), Int128.ONE.toByte())
         Assertions.assertEquals(0.toByte(), Int128.valueOf(15L).toByte())
 
-        Assertions.assertEquals(15.toByte(), Int128.valueOf(1L, 15L).toByte())
-        Assertions.assertEquals((-15).toByte(), Int128.valueOf(1L, -15L).toByte())
+        Assertions.assertEquals(15.toByte(), Int128.valueOf(1uL, 15uL).toByte())
+        Assertions.assertEquals((-15).toByte(), Int128.valueOf(1uL, (-15L).toULong()).toByte())
         Assertions.assertEquals(0.toByte(), Int128.MAX_VALUE.toByte())
         Assertions.assertEquals(0.toByte(), Int128.MIN_VALUE.toByte())
     }
@@ -257,8 +289,8 @@ class Int128Test {
         Assertions.assertEquals(1L.toDouble(), Int128.ONE.toDouble())
         Assertions.assertEquals(15L.toDouble(), Int128.valueOf(15L).toDouble())
 
-        Assertions.assertEquals(15L.toDouble(), Int128.valueOf(1L, 15L).toDouble())
-        Assertions.assertEquals((-15).toDouble(), Int128.valueOf(1L, -15L).toDouble())
+        Assertions.assertEquals(15L.toDouble(), Int128.valueOf(1uL, 15uL).toDouble())
+        Assertions.assertEquals((-15).toDouble(), Int128.valueOf(1uL, (-15L).toULong()).toDouble())
         Assertions.assertEquals(Long.MAX_VALUE.toDouble(), Int128.MAX_VALUE.toDouble())
         Assertions.assertEquals(Long.MAX_VALUE.toDouble(), Int128.MIN_VALUE.toDouble())
     }
@@ -269,8 +301,8 @@ class Int128Test {
         Assertions.assertEquals(1L.toFloat(), Int128.ONE.toFloat())
         Assertions.assertEquals(15L.toFloat(), Int128.valueOf(15L).toFloat())
 
-        Assertions.assertEquals(15L.toFloat(), Int128.valueOf(1L, 15L).toFloat())
-        Assertions.assertEquals((-15).toFloat(), Int128.valueOf(1L, -15L).toFloat())
+        Assertions.assertEquals(15L.toFloat(), Int128.valueOf(1uL, 15uL).toFloat())
+        Assertions.assertEquals((-15).toFloat(), Int128.valueOf(1uL, (-15L).toULong()).toFloat())
         Assertions.assertEquals(Long.MAX_VALUE.toFloat(), Int128.MAX_VALUE.toFloat())
         Assertions.assertEquals(Long.MAX_VALUE.toFloat(), Int128.MIN_VALUE.toFloat())
     }
@@ -281,8 +313,8 @@ class Int128Test {
         Assertions.assertEquals(1, Int128.ONE.toInt())
         Assertions.assertEquals(15, Int128.valueOf(15L).toInt())
 
-        Assertions.assertEquals(15, Int128.valueOf(1L, 15L).toInt())
-        Assertions.assertEquals(-15, Int128.valueOf(1L, -15L).toInt())
+        Assertions.assertEquals(15, Int128.valueOf(1uL, 15uL).toInt())
+        Assertions.assertEquals(-15, Int128.valueOf(1uL, (-15L).toULong()).toInt())
         Assertions.assertEquals(Long.MAX_VALUE.toInt(), Int128.MAX_VALUE.toInt())
         Assertions.assertEquals(Long.MAX_VALUE.toInt(), Int128.MIN_VALUE.toInt())
     }
@@ -293,8 +325,8 @@ class Int128Test {
         Assertions.assertEquals(1L, Int128.ONE.toLong())
         Assertions.assertEquals(15L, Int128.valueOf(15L).toLong())
 
-        Assertions.assertEquals(15L, Int128.valueOf(1L, 15L).toShort())
-        Assertions.assertEquals(-15, Int128.valueOf(1L, -15L).toShort())
+        Assertions.assertEquals(15L, Int128.valueOf(1uL, 15uL).toShort())
+        Assertions.assertEquals(-15, Int128.valueOf(1uL, (-15L).toULong()).toShort())
         Assertions.assertEquals(Long.MAX_VALUE, Int128.MAX_VALUE.toShort())
         Assertions.assertEquals(Long.MAX_VALUE, Int128.MIN_VALUE.toShort())
     }
@@ -305,8 +337,8 @@ class Int128Test {
         Assertions.assertEquals(1.toShort(), Int128.ONE.toShort())
         Assertions.assertEquals(0.toShort(), Int128.valueOf(15L).toShort())
 
-        Assertions.assertEquals(15.toShort(), Int128.valueOf(1L, 15L).toShort())
-        Assertions.assertEquals((-15).toShort(), Int128.valueOf(1L, -15L).toShort())
+        Assertions.assertEquals(15.toShort(), Int128.valueOf(1uL, 15uL).toShort())
+        Assertions.assertEquals((-15).toShort(), Int128.valueOf(1uL, (-15L).toULong()).toShort())
         Assertions.assertEquals(0.toShort(), Int128.MAX_VALUE.toShort())
         Assertions.assertEquals(0.toShort(), Int128.MIN_VALUE.toShort())
     }
@@ -318,11 +350,11 @@ class Int128Test {
             Assertions.assertEquals(0L, h)
         }
         run {
-            val (h, _) = Int128.valueOf(15L, 0L)
+            val (h, _) = Int128.valueOf(15uL, 0uL)
             Assertions.assertEquals(15L, h)
         }
         run {
-            val (h, _) = Int128.valueOf(15L, 45L)
+            val (h, _) = Int128.valueOf(15uL, 45uL)
             Assertions.assertEquals(15L, h)
         }
     }
@@ -334,11 +366,11 @@ class Int128Test {
             Assertions.assertEquals(15L, l)
         }
         run {
-            val (_, l) = Int128.valueOf(15L, 0L)
+            val (_, l) = Int128.valueOf(15uL, 0uL)
             Assertions.assertEquals(0L, l)
         }
         run {
-            val (_, l) = Int128.valueOf(15L, 45L)
+            val (_, l) = Int128.valueOf(15uL, 45uL)
             Assertions.assertEquals(45L, l)
         }
     }

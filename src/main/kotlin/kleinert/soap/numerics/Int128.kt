@@ -1,150 +1,123 @@
 package kleinert.soap.numerics
 
-import java.math.BigInteger
-import kotlin.math.min
-
-
-data class Int128(val high: Long, val low: Long) : Comparable<Int128>, Number() {
+data class Int128(val high: ULong, val low: ULong) : Comparable<Int128>, Number() {
     companion object {
-        val ZERO = Int128(0L, 0L)
-        val ONE = Int128(0, 1)
-        val MAX_VALUE = Int128(Long.MAX_VALUE, -0x1L)
-        val MIN_VALUE = Int128(Long.MIN_VALUE, 0x0000000000000000L)
+        val ZERO = Int128(0UL, 0UL)
+        val ONE = Int128(0UL, 1UL)
+        val MAX_VALUE = Int128(Long.MAX_VALUE.toULong(), ULong.MAX_VALUE)
+        val MIN_VALUE = Int128(Long.MIN_VALUE.toULong(), 0uL)
 
-        fun valueOf(high: Long, low: Long): Int128 = Int128(high, low)
-        fun valueOf(high: Long, low: ULong): Int128 = Int128(high, low.toLong())
-        fun valueOf(low: Long): Int128 = Int128(0L, low)
-        fun valueOf(low: Int): Int128 = Int128(0L, low.toLong())
-
-        fun valueOf(bigInt: BigInteger): Int128 {
-            val bigIntOfLongMax = BigInteger.valueOf(ULong.MAX_VALUE.toLong())
-            val high = bigInt.and(bigIntOfLongMax.shiftLeft(64)).toLong()
-            val low = bigInt.and(bigIntOfLongMax).toLong()
-            return Int128(high, low)
-        }
+        fun valueOf(high: ULong, low: ULong): Int128 = Int128(high, low)
+        fun valueOf(low: ULong): Int128 = Int128(0uL, low)
+        fun valueOf(low: UInt): Int128 = Int128(0uL, low.toULong())
+        fun valueOf(low: Int): Int128 = valueOf(low.toLong())
+        fun valueOf(low: Long): Int128 =
+            if (low < 0L) Int128(ULong.MAX_VALUE, low.toULong())
+            else Int128(0uL, low.toULong())
     }
 
     override fun compareTo(other: Int128): Int {
         var result = high.compareTo(other.high)
-        if (result == 0) {
-            result = java.lang.Long.compareUnsigned(low, other.low)
-        }
+        if (result == 0) result = low.compareTo(other.low)
         return result
     }
 
-    fun isNegative(): Boolean = high < 0
-    fun isPositive(): Boolean = high > 0 || high == 0L && low != 0L
-    fun isZero(): Boolean = (high or low) == 0L
+    override fun equals(other: Any?): Boolean {
+        if (this === other)
+            return true
+        return when (other) {
+            is Int128 -> high == other.high && low == other.low
+            is Byte, is Short, is Int, is Long -> high == 0uL && low == (other as Number).toLong().toULong()
+            is UByte -> high == 0uL && low >= 0uL && low == other.toULong()
+            is UShort -> high == 0uL && low >= 0uL && low == other.toULong()
+            is UInt -> high == 0uL && low >= 0uL && low == other.toULong()
+            is ULong -> high == 0uL && low >= 0uL && low == other.toULong()
+            else -> false
+        }
+    }
 
-    infix fun and(b: Int128): Int128 = Int128(high and b.high, low and b.low)
-    infix fun or(b: Int128): Int128 = Int128(high or b.high, low or b.low)
-    infix fun xor(b: Int128): Int128 = Int128(high xor b.high, low xor b.low)
-    operator fun not(): Int128 = Int128(-high, -low)
-
-    fun shiftRight(shift: Int): Int128 {
-        val newHigh = high shr min(shift, 63)
-
-        val newLow = if (shift < 64)
-            high shl 1 shl 63 - shift or (low ushr shift)
-        else
-            high shr shift - 64
-
+    infix operator fun plus(other: Int): Int128 = plus(valueOf(other))
+    infix operator fun plus(other: UInt): Int128 = plus(valueOf(other))
+    infix operator fun plus(other: Long): Int128 = plus(valueOf(other))
+    infix operator fun plus(other: ULong): Int128 = plus(valueOf(other))
+    infix operator fun plus(other: Int128): Int128 {
+        val newLow = low + other.low
+        var newHigh = high + other.high
+        if (newLow < low) newHigh++
         return Int128(newHigh, newLow)
     }
 
-    fun shiftLeft(shift: Int): Int128 {
-        val newHigh = if (shift < 64)
-            high shl shift or (low ushr 1 ushr 63 - shift)
-        else
-            low shl shift - 64
+    infix operator fun minus(other: Int): Int128 = plus(-valueOf(other))
+    infix operator fun minus(other: Long): Int128 = plus(-valueOf(other))
+    infix operator fun minus(other: UInt): Int128 = plus(-valueOf(other))
+    infix operator fun minus(other: ULong): Int128 = plus(-valueOf(other))
+    infix operator fun minus(other: Int128): Int128 = plus(-other)
 
-        val newLow = low shl if (shift < 64) shift else 0
+    operator fun unaryMinus(): Int128 = Int128(high.inv() + (if (low == 0uL) 1u else 0u), low.inv() + 1u)
 
-        return Int128(newHigh, newLow)
-    }
+    fun inv(): Int128 = Int128(high.inv(), low.inv())
 
-    fun shiftRightUnsigned(shift: Int): Int128 {
-        val newHigh = if (shift < 64) high ushr shift else 0
-
-        val newLow = if (shift < 64)
-            high shl 1 shl 63 - shift or (low ushr shift)
-        else
-            high ushr shift - 64
-
-        return Int128(newHigh, newLow)
-    }
+    infix fun and(other: Int128): Int128 = Int128(high and other.high, low and other.low)
+    infix fun or(other: Int128): Int128 = Int128(high or other.high, low or other.low)
+    infix fun xor(other: Int128): Int128 = Int128(high xor other.high, low xor other.low)
 
     fun numberOfLeadingZeros(): Int {
-        var count = high.countLeadingZeroBits()
-        if (count == 64) count += low.countLeadingZeroBits()
-        return count
+        if (high == 0uL) return low.countLeadingZeroBits() + 64
+        return high.countLeadingZeroBits()
     }
 
     fun numberOfTrailingZeros(): Int {
-        var count = low.countTrailingZeroBits()
-        if (count == 64) count += high.countTrailingZeroBits()
-        return count
+        if (low == 0uL) return high.countTrailingZeroBits() + 64
+        return low.countLeadingZeroBits()
     }
 
-    fun bitCount(): Int = high.countOneBits() + low.countOneBits()
+    fun countOneBits(): Int = high.countOneBits() + low.countOneBits()
 
-    operator fun plus(other: Long): Int128 = plus(valueOf(other))
-    operator fun plus(other: Int): Int128 = plus(valueOf(other))
-    operator fun plus(other: BigInteger): Int128 = plus(valueOf(other))
-    operator fun plus(other: Int128): Int128 {
-        var sumHigh = high+other.high
-        val sumLow = low + other.low
-        if (sumLow < low) sumHigh += 1
-        return Int128(sumHigh, sumLow)
-    }
-    fun plusExact(other: Int128): Int128 {
-        var sumHigh = high+other.high
-        val sumLow = low + other.low
-        if (sumLow < low) sumHigh += 1
-        if (sumHigh <high) throw IllegalStateException()
-        return Int128(sumHigh, sumLow)
+    infix fun shl(count: Int): Int128 {
+        if (count >= 64) return Int128(low shl (count - 64), 0u)
+        return Int128((high shl count) or (low shr (64 - count)), low shl count)
     }
 
-    /*
-    PairInt128 subtract_128_bits(int64_t a_high, int64_t a_low, int64_t b_high, int64_t b_low) {
-        int64_t borrow = a_low < b_low;
-        int64_t diff_low = a_low - b_low - borrow;
-        int64_t diff_high = a_high - b_high - (borrow ? 1 : 0);
-        return (PairInt128){diff_high, diff_low};
+    fun shr(rhs: Int): Int128 {
+        val lhs = this
+        if (lhs > Int128(0uL, 0uL)) {
+            val (h, l) = UInt128(high, low).shr(rhs)
+            return Int128(h, l)
+        }
+
+        if (rhs > 64) return Int128(
+            ULong.MAX_VALUE,
+            (lhs.high shr (rhs - 64)) or (ULong.MAX_VALUE shl (64 - (rhs - 64)))
+        )
+        if (rhs == 64) return Int128(ULong.MAX_VALUE, high)
+
+        return Int128(
+            (lhs.high shr rhs) or (ULong.MAX_VALUE shl (64 - rhs)),
+            (low shr rhs) or (high shl (64 - rhs))
+        )
     }
-     */
-    operator fun minus(other: Long): Int128 = minus(valueOf(other))
-    operator fun minus(other: Int): Int128 = minus(valueOf(other))
-    operator fun minus(other: BigInteger): Int128 = minus(valueOf(other))
-    operator fun minus(other: Int128): Int128 {
-        val borrow = if (low < other.low) 1 else 0
-        val diffLow = low - other.low - borrow
-        val diffHigh = high - other.high - borrow
-        return Int128(diffHigh, diffLow)
-    }
 
-    operator fun times(other: Int128): Int128 = TODO()
-    operator fun times(other: Long): Int128 = times(valueOf(other))
-    operator fun times(other: Int): Int128 = times(valueOf(other))
-    operator fun times(other: BigInteger): Int128 = times(valueOf(other))
 
-    operator fun div(other: Int128): Int128 = TODO()
-    operator fun div(other: Long): Int128 = div(valueOf(other))
-    operator fun div(other: Int): Int128 = div(valueOf(other))
-    operator fun div(other: BigInteger): Int128 = div(valueOf(other))
-
-    operator fun rem(other: Int128): Int128 = TODO()
-    operator fun rem(other: Long): Int128 = div(valueOf(other))
-    operator fun rem(other: Int): Int128 = div(valueOf(other))
-    operator fun rem(other: BigInteger): Int128 = div(valueOf(other))
-
-    fun increment(): Int128 = if (low == -1L) Int128(high+1, 0L) else Int128(high, low+1)
-    fun decrement(): Int128 = minus(ONE)
-
-    override fun toLong(): Long = low
+    fun toULong(): ULong = low
+    fun toUByte(): UByte = low.toUByte()
+    fun toUShort(): UShort = low.toUShort()
+    fun toUInt(): UInt = low.toUInt()
+    override fun toLong(): Long = low.toLong()
     override fun toByte(): Byte = toLong().toByte()
     override fun toShort(): Short = toLong().toShort()
     override fun toInt(): Int = toLong().toInt()
     override fun toFloat(): Float = toLong().toFloat()
     override fun toDouble(): Double = toLong().toDouble()
+    override fun hashCode(): Int {
+        var result = high.hashCode()
+        result = 31 * result + low.hashCode()
+        return result
+    }
+
+    fun isNegative(): Boolean = (high and 0x8000_0000_0000_0000uL) != 0uL
+    fun isPositive(): Boolean = (high and 0x8000_0000_0000_0000uL) == 0uL
+    fun isZero(): Boolean = high == 0uL && low == 0uL
+
+    fun increment(): Int128 = plus(Int128.ONE)
+    fun decrement(): Int128 = minus(Int128.ONE)
 }
