@@ -4,6 +4,7 @@ data class Int128(val high: ULong, val low: ULong) : Comparable<Int128>, Number(
     companion object {
         val ZERO = Int128(0UL, 0UL)
         val ONE = Int128(0UL, 1UL)
+        val MINUS_ONE = Int128(ULong.MAX_VALUE, ULong.MAX_VALUE)
         val MAX_VALUE = Int128(Long.MAX_VALUE.toULong(), ULong.MAX_VALUE)
         val MIN_VALUE = Int128(Long.MIN_VALUE.toULong(), 0uL)
 
@@ -17,9 +18,17 @@ data class Int128(val high: ULong, val low: ULong) : Comparable<Int128>, Number(
     }
 
     override fun compareTo(other: Int128): Int {
-        var result = high.compareTo(other.high)
-        if (result == 0) result = low.compareTo(other.low)
-        return result
+        if (high == other.high && low == other.low)
+            return 0
+
+        val cvt = high.toLong()
+        val cvt2 = other.high.toLong()
+
+        if (cvt == cvt2) {
+            return low.toLong().compareTo(other.low.toLong())
+        }
+
+        return cvt.compareTo(cvt2)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -37,9 +46,15 @@ data class Int128(val high: ULong, val low: ULong) : Comparable<Int128>, Number(
     }
 
     infix operator fun plus(other: Int): Int128 = plus(valueOf(other))
-    infix operator fun plus(other: UInt): Int128 = plus(valueOf(other))
+    infix operator fun plus(other: UInt): Int128 = plus(other.toULong())
     infix operator fun plus(other: Long): Int128 = plus(valueOf(other))
-    infix operator fun plus(other: ULong): Int128 = plus(valueOf(other))
+
+    infix operator fun plus(other: ULong): Int128 {
+        val newLow = low + other
+        if (newLow < low) return Int128(high + 1u, newLow)
+        return Int128(high, newLow)
+    }
+
     infix operator fun plus(other: Int128): Int128 {
         val newLow = low + other.low
         var newHigh = high + other.high
@@ -53,7 +68,130 @@ data class Int128(val high: ULong, val low: ULong) : Comparable<Int128>, Number(
     infix operator fun minus(other: ULong): Int128 = plus(-valueOf(other))
     infix operator fun minus(other: Int128): Int128 = plus(-other)
 
-    operator fun unaryMinus(): Int128 = Int128(high.inv() + (if (low == 0uL) 1u else 0u), low.inv() + 1u)
+    operator fun unaryMinus(): Int128 = Int128(
+        high.inv() + (if (low == 0uL) 1u else 0u),
+        low.inv() + 1u
+    )
+
+    infix operator fun times(other: Int): Int128 = times(valueOf(other))
+    infix operator fun times(other: UInt): Int128 = times(other.toULong())
+    infix operator fun times(other: Long): Int128 = times(valueOf(other))
+    infix operator fun times(other: ULong): Int128 = times(valueOf(other))
+
+    infix operator fun times(other: Int128): Int128 {
+        if (equals(MINUS_ONE))
+            return -other
+
+        if (other == MINUS_ONE)
+            return -this
+
+        var lhs = this
+        var rhs = other
+        var resultNegative = false
+        if (this < ZERO) {
+            resultNegative = !resultNegative
+            lhs = -lhs
+        }
+        if (rhs < ZERO) {
+            resultNegative = !resultNegative
+            rhs = -rhs
+        }
+        val temp = UInt128(lhs.high, lhs.low) * UInt128(rhs.high, rhs.low)
+        val result = Int128(temp.high, temp.low)
+        if (resultNegative) return -result
+        return result
+    }
+
+    fun divMod(other: Int128): Pair<Int128, Int128> {
+        if (other == ZERO) throw ArithmeticException("Division by zero.")
+        if (equals(other)) return ONE to ZERO
+
+        var divResult: Int128? = null
+        if (equals(MIN_VALUE)) divResult = ZERO
+
+        var remResult: Int128? = null
+        if (other == MIN_VALUE) remResult = this
+
+        // This case can never be true here.
+        // if (remResult != null && divResult != null) return divResult to remResult
+
+        var divNegative = false
+        var remNegative = false
+        var lhs = this
+        var rhs = other
+        if (lhs < ZERO) {
+            divNegative = !divNegative
+            remNegative = !remNegative
+            lhs = -lhs
+        }
+        if (rhs < ZERO) {
+            divNegative = !divNegative
+            rhs = -rhs
+        }
+
+        val uLhs = UInt128(lhs.high, lhs.low)
+        val uRhs = UInt128(rhs.high, rhs.low)
+        val (tempDivRes, tempRemRes) = uLhs.divMod(uRhs)
+
+        if (divResult == null) {
+            val (divHigh, divLow) = tempDivRes
+            divResult = Int128(divHigh, divLow)
+            if (divNegative) divResult = -divResult
+        }
+        if (remResult == null) {
+            val (remHigh, remLow) = tempRemRes
+            remResult = Int128(remHigh, remLow)
+            if (remNegative) remResult = -remResult
+        }
+
+        return divResult to remResult
+    }
+
+    infix operator fun div(other: Int128): Int128 {
+        if (other == ZERO) throw ArithmeticException("Division by zero.")
+        if (equals(other)) return ONE
+        if (equals(MIN_VALUE)) return ZERO
+
+        var negative = false
+        var lhs = this
+        var rhs = other
+        if (lhs < ZERO) {
+            negative = !negative
+            lhs = -lhs
+        }
+        if (rhs < ZERO) {
+            negative = !negative
+            rhs = -rhs
+        }
+
+        val temp = UInt128(lhs.high, lhs.low) / UInt128(rhs.high, rhs.low)
+        val result = Int128(temp.high, temp.low)
+
+        if (negative) return -result
+        return result
+    }
+
+    operator fun rem(other: Int128): Int128 {
+        if (other == ZERO) throw ArithmeticException("Division by zero.")
+        if (equals(MIN_VALUE)) return ZERO
+        if (other == MIN_VALUE) return this
+
+        var negative = false
+        var lhs = this
+        var rhs = other
+        if (lhs < ZERO) {
+            negative = !negative
+            lhs = -lhs
+        }
+        if (rhs < ZERO) {
+            rhs = -rhs
+        }
+        val temp = UInt128(lhs.high, lhs.low) rem UInt128(rhs.high, rhs.low)
+        val result = Int128(temp.high, temp.low)
+
+        if (negative && result > ZERO) return -result
+        return result
+    }
 
     fun inv(): Int128 = Int128(high.inv(), low.inv())
 
@@ -68,35 +206,51 @@ data class Int128(val high: ULong, val low: ULong) : Comparable<Int128>, Number(
 
     fun numberOfTrailingZeros(): Int {
         if (low == 0uL) return high.countTrailingZeroBits() + 64
-        return low.countLeadingZeroBits()
+        return low.countTrailingZeroBits()
     }
 
     fun countOneBits(): Int = high.countOneBits() + low.countOneBits()
 
     infix fun shl(count: Int): Int128 {
+        if (count == 0) return this
+        if (count >= 128) return ZERO
         if (count >= 64) return Int128(low shl (count - 64), 0u)
         return Int128((high shl count) or (low shr (64 - count)), low shl count)
     }
 
-    fun shr(rhs: Int): Int128 {
+    infix fun shr(rhs: Int): Int128 {
+        if (rhs == 0)
+            return this
+
         val lhs = this
-        if (lhs > Int128(0uL, 0uL)) {
-            val (h, l) = UInt128(high, low).shr(rhs)
+        if (lhs >= Int128(0uL, 0uL)) {
+            val (h, l) = ushr(rhs)
             return Int128(h, l)
         }
+
+        if (rhs == 64)
+            return Int128(ULong.MAX_VALUE, high)
 
         if (rhs > 64) return Int128(
             ULong.MAX_VALUE,
             (lhs.high shr (rhs - 64)) or (ULong.MAX_VALUE shl (64 - (rhs - 64)))
         )
-        if (rhs == 64) return Int128(ULong.MAX_VALUE, high)
 
         return Int128(
-            (lhs.high shr rhs) or (ULong.MAX_VALUE shl (64 - rhs)),
+            (lhs.high shr rhs) or (0uL.inv() shl (64 - rhs)),
             (low shr rhs) or (high shl (64 - rhs))
         )
     }
 
+    infix fun ushr(count: Int): Int128 {
+        if (count >= 128) return ZERO
+        if (count >= 64) return Int128(low shr (count - 64), 0uL)
+
+        return Int128(
+            high shr count,
+            (low shr count) or (high shl (64 - count))
+        )
+    }
 
     fun toULong(): ULong = low
     fun toUByte(): UByte = low.toUByte()
@@ -118,6 +272,6 @@ data class Int128(val high: ULong, val low: ULong) : Comparable<Int128>, Number(
     fun isPositive(): Boolean = (high and 0x8000_0000_0000_0000uL) == 0uL
     fun isZero(): Boolean = high == 0uL && low == 0uL
 
-    fun increment(): Int128 = plus(Int128.ONE)
-    fun decrement(): Int128 = minus(Int128.ONE)
+    fun increment(): Int128 = plus(ONE)
+    fun decrement(): Int128 = minus(ONE)
 }

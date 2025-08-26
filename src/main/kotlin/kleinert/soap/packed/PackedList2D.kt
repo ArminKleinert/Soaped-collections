@@ -1,5 +1,6 @@
 package kleinert.soap.packed
 
+
 /**
  * A packed abstraction for a [List] of [List]s. All sublists have the same size.
  * Traversal, reading and setting of elements in the sublists is possible, but adding and removing elements is not.
@@ -11,7 +12,7 @@ package kleinert.soap.packed
  *
  * @author Armin Kleinert
  */
-class PackedList2D<T> : AbstractMutableList<List<T>>, RandomAccess {
+class PackedList2D<T : Any> : AbstractMutableList<List<T>>, RandomAccess {
     private var packed: MutableList<T>
 
     override val size: Int
@@ -182,8 +183,10 @@ class PackedList2D<T> : AbstractMutableList<List<T>>, RandomAccess {
     /**
      * Get a sub-list.
      */
-    override fun get(index: Int): List<T> =
-        ArrayList(packed).subList(index * subListSize, index * subListSize + subListSize)
+    override fun get(index: Int): List<T> {
+        checkBounds(index, subListSize)
+        return ArrayList(packed).subList(index * subListSize, index * subListSize + subListSize)
+    }
 
     override fun removeAt(index: Int): List<T> = throw UnsupportedOperationException()
 
@@ -211,6 +214,61 @@ class PackedList2D<T> : AbstractMutableList<List<T>>, RandomAccess {
 
     override fun add(index: Int, element: List<T>) =
         throw UnsupportedOperationException()
+
+    override fun iterator(): MutableIterator<List<T>> = listIterator()
+
+    override fun listIterator(): MutableListIterator<List<T>> = super.listIterator(0)
+
+    // FIXME
+    override fun listIterator(index: Int): MutableListIterator<List<T>> = object : MutableListIterator<List<T>> {
+        private var cursor = index
+
+        init {checkBounds(index, size)}
+
+        override fun add(element: List<T>) {
+            throw UnsupportedOperationException()
+        }
+
+        override fun hasNext(): Boolean = cursor < size
+
+        override fun hasPrevious(): Boolean = cursor != 0
+
+        // FIXME
+        override fun next(): List<T> {
+             try {
+                val i = cursor
+                val next = get(i)
+                cursor = i + 1
+                 return next
+            } catch (var3: java.lang.IndexOutOfBoundsException) {
+                throw NoSuchElementException()
+            }
+        }
+
+        override fun nextIndex(): Int = cursor
+
+        // FIXME
+        override fun previous(): List<T> {
+            try {
+                val i = cursor - 1
+                val previous = get(i)
+                cursor = i
+                return previous
+            } catch (var3: IndexOutOfBoundsException) {
+                throw NoSuchElementException()
+            }
+        }
+
+        override fun previousIndex(): Int =cursor - 1
+
+        override fun remove() {
+            throw UnsupportedOperationException()
+        }
+
+        override fun set(element: List<T>) {
+            set(cursor, element)
+        }
+    }
 
     private fun checkBounds(index: Int, innerIndex: Int) {
         if (isEmpty())

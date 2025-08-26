@@ -61,9 +61,9 @@ class PackedList2DTest {
             Assertions.assertThrows(IndexOutOfBoundsException::class.java) { lst.subList(1, 2) }
         }
         run {
-            val lst = PackedList2D<Int>(listOf(listOf()), frozen = false)
+            val lst = PackedList2D<Int>(listOf(listOf(55)), frozen = false)
             Assertions.assertThrows(IndexOutOfBoundsException::class.java) { lst[0] = listOf(1) }
-            Assertions.assertThrows(IndexOutOfBoundsException::class.java) { lst[0, 0] = 0 }
+            Assertions.assertThrows(IndexOutOfBoundsException::class.java) { lst[0, 1] = 0 }
             Assertions.assertThrows(IndexOutOfBoundsException::class.java) { lst.subList(1, 2)[0] = listOf(6) }
         }
         run {
@@ -214,7 +214,7 @@ class PackedList2DTest {
     @Test
     fun textFrozen() {
         run {
-            val lst = PackedList2D<Int>(listOf(listOf()), frozen = false)
+            val lst = PackedList2D<Int>(listOf(), frozen = false)
             Assertions.assertFalse(lst.frozen)
             Assertions.assertThrows(IndexOutOfBoundsException::class.java) { lst[0] = listOf(1) }
             Assertions.assertThrows(IndexOutOfBoundsException::class.java) { lst[0, 0] = 0 }
