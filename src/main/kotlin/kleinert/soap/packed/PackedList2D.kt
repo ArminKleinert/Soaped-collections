@@ -184,7 +184,7 @@ class PackedList2D<T : Any> : AbstractMutableList<List<T>>, RandomAccess {
      * Get a sub-list.
      */
     override fun get(index: Int): List<T> {
-        checkBounds(index, subListSize)
+        checkBounds(index, subListSize - 1)
         return ArrayList(packed).subList(index * subListSize, index * subListSize + subListSize)
     }
 
@@ -203,7 +203,7 @@ class PackedList2D<T : Any> : AbstractMutableList<List<T>>, RandomAccess {
             throw IllegalArgumentException()
 
         val offset = index * subListSize
-        val old = get(index)
+        val old = get(index).toList()
 
         for ((i, item) in element.withIndex()) {
             packed[offset + i] = item
@@ -223,46 +223,36 @@ class PackedList2D<T : Any> : AbstractMutableList<List<T>>, RandomAccess {
     override fun listIterator(index: Int): MutableListIterator<List<T>> = object : MutableListIterator<List<T>> {
         private var cursor = index
 
-        init {checkBounds(index, size)}
-
-        override fun add(element: List<T>) {
-            throw UnsupportedOperationException()
+        init {
+            checkBounds(index, size - 1)
         }
 
+        override fun add(element: List<T>) = throw UnsupportedOperationException()
         override fun hasNext(): Boolean = cursor < size
-
         override fun hasPrevious(): Boolean = cursor != 0
+        override fun nextIndex(): Int = cursor
+        override fun previousIndex(): Int = cursor - 1
+        override fun remove() = throw UnsupportedOperationException()
 
         // FIXME
         override fun next(): List<T> {
-             try {
-                val i = cursor
-                val next = get(i)
-                cursor = i + 1
-                 return next
-            } catch (var3: java.lang.IndexOutOfBoundsException) {
-                throw NoSuchElementException()
-            }
-        }
-
-        override fun nextIndex(): Int = cursor
-
-        // FIXME
-        override fun previous(): List<T> {
             try {
-                val i = cursor - 1
-                val previous = get(i)
-                cursor = i
-                return previous
+                val next = get(cursor)
+                cursor++
+                return next
             } catch (var3: IndexOutOfBoundsException) {
                 throw NoSuchElementException()
             }
         }
 
-        override fun previousIndex(): Int =cursor - 1
-
-        override fun remove() {
-            throw UnsupportedOperationException()
+        // FIXME
+        override fun previous(): List<T> {
+            try {
+                cursor--
+                return get(cursor)
+            } catch (var3: IndexOutOfBoundsException) {
+                throw NoSuchElementException()
+            }
         }
 
         override fun set(element: List<T>) {
@@ -274,8 +264,20 @@ class PackedList2D<T : Any> : AbstractMutableList<List<T>>, RandomAccess {
         if (isEmpty())
             throw IndexOutOfBoundsException("Index [$index, $innerIndex] is not in empty list.")
         if (index < 0 || innerIndex < 0 || index >= size || innerIndex >= subListSize)
-            throw IndexOutOfBoundsException("Index [$index, $innerIndex] out of bounds [0, 0] to [$size, $subListSize] (both exclusive).")
+            throw IndexOutOfBoundsException("Index [$index, $innerIndex] out of bounds [0, 0] to [$size, $subListSize] (exclusive).")
     }
+
+    override fun subList(fromIndex: Int, toIndex: Int): MutableList<List<T>> {
+    if (fromIndex <0 || toIndex< 0||fromIndex > toIndex || fromIndex > size || toIndex > size)
+        throw IndexOutOfBoundsException(        )
+        if (fromIndex==toIndex)
+            return mutableListOf()
+        return    unpack().subList(fromIndex, toIndex).toMutableList()
+    }
+
+//    override fun toString(): String {
+//        return "$size $subListSize $packed".toString()
+//    }
 
     override fun toString(): String = joinToString(", ", prefix = "[", postfix = "]")
 

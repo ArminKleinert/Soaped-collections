@@ -113,9 +113,6 @@ class PersistentHashMap<K, V> : PersistentMap<K, V> {
         return res
     }
 
-    override fun equals(other: Any?): Boolean =
-        super.equals(other)
-
     override fun hashCode(): Int =
         nodes.contentHashCode()
 

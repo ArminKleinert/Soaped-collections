@@ -78,8 +78,8 @@ abstract class PersistentMap<K, V> : Map<K, V>, Iterable<Map.Entry<K, V>> {
     }
 
     override fun hashCode(): Int {
-            var hash = 0
-            for (e in this) hash = hash*31+e.hashCode()
-            return hash
+        var hash = 0
+        for (e in this) hash = hash * 31 + e.hashCode()
+        return hash
     }
 }
