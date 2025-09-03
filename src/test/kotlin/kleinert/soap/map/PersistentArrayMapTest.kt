@@ -1,8 +1,8 @@
 package kleinert.soap.map
 
-import kleinert.soap.set.PersistentArraySet
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import kotlin.random.Random
 
 class PersistentArrayMapTest {
     @Test
@@ -18,7 +18,7 @@ class PersistentArrayMapTest {
     }
 
     @Test
-    operator fun iterator() {
+    fun iterator() {
         run {
             var size = 0
             for (e in PersistentArrayMap<Int, Int>(mapOf()))
@@ -30,6 +30,30 @@ class PersistentArrayMapTest {
             for (e in PersistentArrayMap(mapOf(1 to 2, 1 to 4, 1 to 6)))
                 size++
             Assertions.assertEquals(1, size)
+        }
+    }
+
+    @Test
+    fun ordered() {
+        val r = Random(0xC0FFEEBEE) // A bee in my coffee
+        val list = (0..128).map {r.nextInt() to 0}
+        val m = PersistentArrayMap(list)
+
+        // Order is preserved.
+        for ((index, entry) in m.withIndex()) {
+            Assertions.assertEquals(list[index].first , entry.key)
+        }
+
+        // Even when adding entries in a new order, the old order is preserved.
+        for ((index, entry) in (m + list.sortedBy { it.first }).withIndex()) {
+            Assertions.assertEquals(list[index].first , entry.key)
+        }
+
+        // After removing an element, the old order is preserved, without that element.
+        val list1 = list - list[55]
+        val m1 = m.dissoc(list[55].first)
+        for ((index, entry) in m1.withIndex()) {
+            Assertions.assertEquals(list1[index].first , entry.key)
         }
     }
 
@@ -69,11 +93,17 @@ class PersistentArrayMapTest {
     @Test
     fun selectKeys() {
         Assertions.assertEquals(mapOf<Int, Int>(), PersistentArrayMap(mapOf<Int, Int>()).selectKeys(setOf(1, 2, 3)))
-        Assertions.assertEquals(mapOf(1 to 2, 2 to 3), PersistentArrayMap(mapOf(1 to 2, 2 to 3)).selectKeys(setOf(1, 2)))
+        Assertions.assertEquals(
+            mapOf(1 to 2, 2 to 3),
+            PersistentArrayMap(mapOf(1 to 2, 2 to 3)).selectKeys(setOf(1, 2))
+        )
         Assertions.assertEquals(
             mapOf(1 to 2, 2 to 3), PersistentArrayMap(mapOf(1 to 2, 2 to 3, 3 to 4)).selectKeys(setOf(1, 2))
         )
-        Assertions.assertEquals(mapOf(1 to 2), PersistentArrayMap(mapOf(1 to 2, 2 to 3, 3 to 4)).selectKeys(setOf(1, 4)))
+        Assertions.assertEquals(
+            mapOf(1 to 2),
+            PersistentArrayMap(mapOf(1 to 2, 2 to 3, 3 to 4)).selectKeys(setOf(1, 4))
+        )
         Assertions.assertEquals(mapOf<Int, Int>(), PersistentArrayMap(mapOf(1 to 2, 2 to 3)).selectKeys(setOf(3, 4)))
         Assertions.assertEquals(mapOf<Int, Int>(), PersistentArrayMap(mapOf(1 to 2, 2 to 3)).selectKeys(setOf()))
     }

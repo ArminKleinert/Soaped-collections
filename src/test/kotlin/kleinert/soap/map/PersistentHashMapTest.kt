@@ -17,7 +17,7 @@ class PersistentHashMapTest {
     }
 
     @Test
-    operator fun iterator() {
+    fun iterator() {
         run {
             var size = 0
             for (e in PersistentHashMap<Int, Int>(mapOf()))
@@ -146,14 +146,14 @@ class PersistentHashMapTest {
 
         val oldMap = PersistentHashMap(listOf(1 to 2, 2 to 3, 3 to 4))
         val newMap = oldMap.assoc(5, 6)
-        Assertions.assertNotSame(oldMap,newMap)
-        Assertions.assertEquals(mapOf(1 to 2, 2 to 3, 3 to 4, 5 to 6),newMap)
-        Assertions.assertEquals(mapOf(1 to 2, 2 to 3, 3 to 4),oldMap)
+        Assertions.assertNotSame(oldMap, newMap)
+        Assertions.assertEquals(mapOf(1 to 2, 2 to 3, 3 to 4, 5 to 6), newMap)
+        Assertions.assertEquals(mapOf(1 to 2, 2 to 3, 3 to 4), oldMap)
 
         val newMap2 = oldMap.assoc(1, 3)
-        Assertions.assertNotSame(oldMap,newMap2)
-        Assertions.assertEquals(mapOf(1 to 3, 2 to 3, 3 to 4),newMap2)
-        Assertions.assertEquals(mapOf(1 to 2, 2 to 3, 3 to 4),oldMap)
+        Assertions.assertNotSame(oldMap, newMap2)
+        Assertions.assertEquals(mapOf(1 to 3, 2 to 3, 3 to 4), newMap2)
+        Assertions.assertEquals(mapOf(1 to 2, 2 to 3, 3 to 4), oldMap)
     }
 
     @Test

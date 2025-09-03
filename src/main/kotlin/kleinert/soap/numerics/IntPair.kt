@@ -4,6 +4,7 @@ package kleinert.soap.numerics
 value class UIntPair(private val inner: ULong) {
     companion object {
         fun makeUIntPair(first: UInt, second: UInt) = UIntPair((first.toULong() shl 32) or second.toULong())
+        operator fun invoke(first:UInt,second:UInt) = UIntPair((first.toULong() shl 32) or second.toULong())
     }
 
     val first: UInt
@@ -15,24 +16,29 @@ value class UIntPair(private val inner: ULong) {
     operator fun component2() = second
     infix operator fun plus(other:UIntPair) = makeUIntPair(first + other.first, second + other.second)
     infix operator fun minus(other:UIntPair) = makeUIntPair(first - other.first, second - other.second)
+
+    override fun toString(): String = "($first, $second)"
 }
 
 @JvmInline
-value class IntPair(private val inner: Long) {
+value class IntPair(private val inner: ULong) {
     companion object {
-        fun makeIntPair(first: Int, second: Int) = IntPair(((first.toLong() shl 32) or (second and -1).toLong()))
+        fun makeIntPair(first: Int, second: Int) = IntPair(((first.toULong() shl 32) or (second.toUInt() and UInt.MAX_VALUE).toULong()))
+        operator fun invoke(first: Int, second: Int) = IntPair(((first.toULong() shl 32) or (second.toUInt() and UInt.MAX_VALUE).toULong()))
     }
 
     val first: Int
         get() = (inner shr 32).toInt()
     val second: Int
-        get() = (inner and 0xFFFFFFFFL).toInt()
+        get() = (inner and 0xFFFFFFFFuL).toInt()
 
     operator fun component1() = first
     operator fun component2() = second
 
-    infix operator fun plus(other:IntPair) =makeIntPair(first+other.first, second+other.second)
-    infix operator fun minus(other:IntPair) =makeIntPair(first-other.first, second-other.second)
+    infix operator fun plus(other:IntPair) = makeIntPair(first+other.first, second+other.second)
+    infix operator fun minus(other:IntPair) = makeIntPair(first-other.first, second-other.second)
+
+    override fun toString(): String = "($first, $second)"
 }
 
 data class IntQuadruple(

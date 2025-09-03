@@ -53,6 +53,30 @@ class UIntPairTest {
     }
 
     @Test
+    fun createFromInts1() {
+        run {
+            val ip = UIntPair(0u, 0u)
+            Assertions.assertEquals(0u, ip.first)
+            Assertions.assertEquals(0u, ip.second)
+        }
+        run {
+            val ip = UIntPair(1u, 0u)
+            Assertions.assertEquals(1u, ip.first)
+            Assertions.assertEquals(0u, ip.second)
+        }
+        run {
+            val ip = UIntPair(0u, 2u)
+            Assertions.assertEquals(0u, ip.first)
+            Assertions.assertEquals(2u, ip.second)
+        }
+        run {
+            val ip = UIntPair(1u, 2u)
+            Assertions.assertEquals(1u, ip.first)
+            Assertions.assertEquals(2u, ip.second)
+        }
+    }
+
+    @Test
     fun equals() {
         Assertions.assertEquals(UIntPair.makeUIntPair(0u, 0u), UIntPair.makeUIntPair(0u, 0u))
         Assertions.assertEquals(UIntPair.makeUIntPair(1u, 0u), UIntPair.makeUIntPair(1u, 0u))

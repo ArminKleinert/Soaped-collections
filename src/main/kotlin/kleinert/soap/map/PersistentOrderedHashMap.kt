@@ -3,8 +3,9 @@ package kleinert.soap.map
 import kotlin.math.max
 import kotlin.math.min
 
-class PersistentHashMap<K, V> : PersistentMap<K, V> {
+class PersistentOrderedHashMap<K, V> : PersistentMap<K, V> {
     private val nodes: Array<Node<K, V>?>
+    private val orderedKeys: List<K>
 
     companion object {
         private fun nextPowerOfTwo(m: Int): Int {
@@ -21,18 +22,49 @@ class PersistentHashMap<K, V> : PersistentMap<K, V> {
     }
 
     constructor(elements: Collection<Pair<K, V>>) : this(
-        arrayOfNulls(min(max(nextPowerOfTwo(elements.size / 2), 8), 512)), elements.map { (k, v) -> Entry(k, v) }
+        arrayOfNulls(min(max(nextPowerOfTwo(elements.size / 2), 8), 512)),
+        listOf(),
+        elements.map { (k, v) -> Entry(k, v) }
     )
 
     constructor(elements: Map<K, V>) : this(
-        arrayOfNulls(min(max(nextPowerOfTwo(elements.size / 2), 8), 512)), elements.entries
+        arrayOfNulls(min(max(nextPowerOfTwo(elements.size / 2), 8), 512)), listOf(), elements.entries
     )
 
-    private constructor(existingNodes: Array<Node<K, V>?>, additionalElements: Collection<Map.Entry<K, V>>) {
+    private constructor(
+        existingNodes: Array<Node<K, V>?>,
+        oldOrderedKeys: List<K>,
+        additionalElements: Collection<Map.Entry<K, V>>
+    ) {
+//        nodes = existingNodes.copyOf()
+//        val mutableKeys = oldOrderedKeys.toMutableList()
+//        for ((key, value) in additionalElements) {
+//            val h = hash(key)
+//            var nodeAt = nodes[h % nodes.size]
+//            var newNode = Node(key, value, null)
+//            while (nodeAt != null) {
+//                if (key != nodeAt.key) newNode = Node(nodeAt.key, nodeAt.value, newNode)
+//                nodeAt = nodeAt.next
+//            }
+//            nodes[h % nodes.size] = newNode
+//        }
+//        orderedKeys = mutableKeys.toList()
         nodes = existingNodes.copyOf()
-        for ((key, value) in additionalElements) {
+        val mutableKeys = oldOrderedKeys.toMutableList()
+
+        for ((key,value) in additionalElements) {
             val h = hash(key)
-            var nodeAt = nodes[h % nodes.size]
+            var nodeAt = nodes[h%nodes.size]
+            while (nodeAt != null && key != nodeAt.key )
+                nodeAt = nodeAt.next
+
+            // If the key did not exist.
+            if (nodeAt == null) {
+                nodes[h % nodes.size] = Node(key, value, nodes[h%nodes.size])
+                mutableKeys += key
+                continue            }
+
+            nodeAt = nodes[h%nodes.size]
             var newNode = Node(key, value, null)
             while (nodeAt != null) {
                 if (key != nodeAt.key) newNode = Node(nodeAt.key, nodeAt.value, newNode)
@@ -40,24 +72,18 @@ class PersistentHashMap<K, V> : PersistentMap<K, V> {
             }
             nodes[h % nodes.size] = newNode
         }
+
+        orderedKeys = mutableKeys.toList()
     }
 
-    private var bufferedSize: Int = -1
+val keySeq:List<K>
+    get() = orderedKeys
+
+    override val keys: Set<K>
+        get() = orderedKeys.toSet()
 
     override val size: Int
-        get() {
-            if (bufferedSize < 0) {
-                bufferedSize = 0
-                for (node in nodes) {
-                    var currentNode: Node<K, V>? = node
-                    while (currentNode != null) {
-                        bufferedSize++
-                        currentNode = currentNode.next
-                    }
-                }
-            }
-            return bufferedSize
-        }
+        get() = orderedKeys.size
 
     override fun isEmpty(): Boolean = nodes.all { it == null }
 
@@ -77,19 +103,15 @@ class PersistentHashMap<K, V> : PersistentMap<K, V> {
     }
 
     override fun iterator(): Iterator<Map.Entry<K, V>> = iterator {
-        for (node in nodes) {
-            var currentNode: Node<K, V>? = node
-            while (currentNode != null) {
-                yield(Entry(currentNode.key, currentNode.value))
-                currentNode = currentNode.next
-            }
+        for (orderedKey in orderedKeys) {
+            yield(Entry(orderedKey, get(orderedKey)!!))
         }
     }
 
     override fun assocAll(coll: Collection<Pair<K, V>>): PersistentMap<K, V> {
         if (coll.isEmpty())
             return this
-        return PersistentHashMap(nodes, coll.map { (k, v) -> Entry(k, v) })
+        return PersistentOrderedHashMap(nodes, orderedKeys, coll.map { (k, v) -> Entry(k, v) })
     }
 
     override fun dissocAll(ks: Collection<K>): PersistentMap<K, V> {
@@ -100,7 +122,7 @@ class PersistentHashMap<K, V> : PersistentMap<K, V> {
                 lst.add(k to v)
         if (lst.size == size)
             return this
-        return PersistentHashMap(lst)
+        return PersistentOrderedHashMap(lst)
     }
 
     override fun entryList(): List<Map.Entry<K, V>> {
@@ -114,7 +136,6 @@ class PersistentHashMap<K, V> : PersistentMap<K, V> {
         }
         return res
     }
-
 
     internal data class Node<K, V>(override val key: K, override val value: V, val next: Node<K, V>?) :
         Map.Entry<K, V>

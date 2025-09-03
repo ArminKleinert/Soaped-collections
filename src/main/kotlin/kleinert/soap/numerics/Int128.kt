@@ -12,9 +12,58 @@ data class Int128(val high: ULong, val low: ULong) : Comparable<Int128>, Number(
         fun valueOf(low: ULong): Int128 = Int128(0uL, low)
         fun valueOf(low: UInt): Int128 = Int128(0uL, low.toULong())
         fun valueOf(low: Int): Int128 = valueOf(low.toLong())
+
         fun valueOf(low: Long): Int128 =
             if (low < 0L) Int128(ULong.MAX_VALUE, low.toULong())
             else Int128(0uL, low.toULong())
+
+        fun valueOf(s: String, base: Int = 10): Int128 {
+            require(base in 2..36)
+
+            if (s.isEmpty())
+                throw NumberFormatException()
+
+            var str = s.trimStart(' ', '\t', '+')
+            val neg = str.startsWith('-')
+            str = str.trimStart('-', ' ', '\t', '+')
+
+            if (str.isBlank())
+                throw NumberFormatException()
+
+            var res = UInt128.ZERO
+            for (c in str) {
+                if (c == ' ' || c == '\t') break
+
+                var digit = c.code
+
+                digit -= if (base > 10) {
+                    when (digit) {
+                        in 'A'.code..'Z'.code -> 'A'.code - 10
+                        in 'a'.code..'z'.code -> 'a'.code - 10
+                        in '0'.code..'9'.code -> '0'.code
+                        else -> throw NumberFormatException()
+                    }
+                } else {
+                    if (digit !in '0'.code..(base + '0'.code))
+                        throw NumberFormatException()
+                    '0'.code
+                }
+
+                res *= base.toULong()
+                res += digit.toULong()
+            }
+
+            val signedRes = Int128(res.high, res.low)
+            if (neg) return -signedRes
+            return signedRes
+        }
+
+        fun valueOfOrNull(s: String, base: Int = 10): Int128? =
+            try {
+                valueOf(s, base)
+            } catch (nfe: NumberFormatException) {
+                null
+            }
     }
 
     override fun compareTo(other: Int128): Int {
@@ -29,20 +78,6 @@ data class Int128(val high: ULong, val low: ULong) : Comparable<Int128>, Number(
         }
 
         return cvt.compareTo(cvt2)
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other)
-            return true
-        return when (other) {
-            is Int128 -> high == other.high && low == other.low
-            is Byte, is Short, is Int, is Long -> high == 0uL && low == (other as Number).toLong().toULong()
-            is UByte -> high == 0uL && low >= 0uL && low == other.toULong()
-            is UShort -> high == 0uL && low >= 0uL && low == other.toULong()
-            is UInt -> high == 0uL && low >= 0uL && low == other.toULong()
-            is ULong -> high == 0uL && low >= 0uL && low == other.toULong()
-            else -> false
-        }
     }
 
     infix operator fun plus(other: Int): Int128 = plus(valueOf(other))
@@ -89,7 +124,7 @@ data class Int128(val high: ULong, val low: ULong) : Comparable<Int128>, Number(
         var rhs = other
         var resultNegative = false
         if (this < ZERO) {
-            resultNegative = !resultNegative
+            resultNegative = true
             lhs = -lhs
         }
         if (rhs < ZERO) {
@@ -120,8 +155,8 @@ data class Int128(val high: ULong, val low: ULong) : Comparable<Int128>, Number(
         var lhs = this
         var rhs = other
         if (lhs < ZERO) {
-            divNegative = !divNegative
-            remNegative = !remNegative
+            divNegative = true
+            remNegative = true
             lhs = -lhs
         }
         if (rhs < ZERO) {
@@ -147,51 +182,9 @@ data class Int128(val high: ULong, val low: ULong) : Comparable<Int128>, Number(
         return divResult to remResult
     }
 
-    infix operator fun div(other: Int128): Int128 {
-        if (other == ZERO) throw ArithmeticException("Division by zero.")
-        if (equals(other)) return ONE
-        if (equals(MIN_VALUE)) return ZERO
+    infix operator fun div(other: Int128): Int128 =divMod(other).first
 
-        var negative = false
-        var lhs = this
-        var rhs = other
-        if (lhs < ZERO) {
-            negative = !negative
-            lhs = -lhs
-        }
-        if (rhs < ZERO) {
-            negative = !negative
-            rhs = -rhs
-        }
-
-        val temp = UInt128(lhs.high, lhs.low) / UInt128(rhs.high, rhs.low)
-        val result = Int128(temp.high, temp.low)
-
-        if (negative) return -result
-        return result
-    }
-
-    operator fun rem(other: Int128): Int128 {
-        if (other == ZERO) throw ArithmeticException("Division by zero.")
-        if (equals(MIN_VALUE)) return ZERO
-        if (other == MIN_VALUE) return this
-
-        var negative = false
-        var lhs = this
-        var rhs = other
-        if (lhs < ZERO) {
-            negative = !negative
-            lhs = -lhs
-        }
-        if (rhs < ZERO) {
-            rhs = -rhs
-        }
-        val temp = UInt128(lhs.high, lhs.low) rem UInt128(rhs.high, rhs.low)
-        val result = Int128(temp.high, temp.low)
-
-        if (negative && result > ZERO) return -result
-        return result
-    }
+    operator fun rem(other: Int128): Int128 =divMod(other).second
 
     fun inv(): Int128 = Int128(high.inv(), low.inv())
 
@@ -262,11 +255,6 @@ data class Int128(val high: ULong, val low: ULong) : Comparable<Int128>, Number(
     override fun toInt(): Int = toLong().toInt()
     override fun toFloat(): Float = toLong().toFloat()
     override fun toDouble(): Double = toLong().toDouble()
-    override fun hashCode(): Int {
-        var result = high.hashCode()
-        result = 31 * result + low.hashCode()
-        return result
-    }
 
     fun isNegative(): Boolean = (high and 0x8000_0000_0000_0000uL) != 0uL
     fun isPositive(): Boolean = (high and 0x8000_0000_0000_0000uL) == 0uL
@@ -274,4 +262,28 @@ data class Int128(val high: ULong, val low: ULong) : Comparable<Int128>, Number(
 
     fun increment(): Int128 = plus(ONE)
     fun decrement(): Int128 = minus(ONE)
+
+//    fun toString(base: Int): String {
+//        require((base in 2..32) || base == 64) { "Base must be between 2..32 or 64" }
+//
+//        if (isNegative()) {
+//            val (hi, lo) = -this
+//            return "-" + UInt128(hi, lo).toString(base)
+//        }
+//        val (hi, lo) = this
+//        return UInt128(hi, lo).toString(base)
+//    }
+
+    fun toString(base: Int): String {
+        require((base in 2..32) || base == 64) { "Base must be between 2..32 or 64" }
+return "Int128(${high.toString(16)}, ${low.toString(16)})"
+//        if (isNegative()) {
+//            val (hi, lo) = -this
+//            return "-" + UInt128(hi, lo).toString(base)
+//        }
+//        val (hi, lo) = this
+//        return UInt128(hi, lo).toString(base)
+    }
+
+    override fun toString(): String = toString(10)
 }
