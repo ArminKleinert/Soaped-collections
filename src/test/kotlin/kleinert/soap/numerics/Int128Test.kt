@@ -315,56 +315,60 @@ class Int128Test {
 
     @Test
     fun divInt128() {
-//        Assertions.assertThrows(ArithmeticException::class.java) { Int128.MAX_VALUE / Int128.ZERO }
-//        Assertions.assertEquals(Int128.ZERO, Int128.ONE / Int128.valueOf(2))
-//        Assertions.assertEquals(Int128.MAX_VALUE, Int128.MAX_VALUE / Int128.ONE)
-//        Assertions.assertEquals(Int128.ONE, Int128.MAX_VALUE / Int128.MAX_VALUE)
-//        Assertions.assertEquals(Int128.valueOf(2), Int128.valueOf(4) / Int128.valueOf(2))
-//
-//        Assertions.assertEquals(Int128.ONE, Int128.MINUS_ONE / Int128.MINUS_ONE)
-//        Assertions.assertEquals(Int128.MINUS_ONE, Int128.ONE / Int128.MINUS_ONE)
-//        Assertions.assertEquals(Int128.MINUS_ONE, Int128.MINUS_ONE / Int128.ONE)
-//
-//        Assertions.assertEquals(Int128.valueOf(2), Int128.valueOf(-4) / Int128.valueOf(-2))
-//        Assertions.assertEquals(Int128.valueOf(-2), Int128.valueOf(-4) / Int128.valueOf(2))
-//        Assertions.assertEquals(Int128.valueOf(-2), Int128.valueOf(4) / Int128.valueOf(-2))
-//
-//        Assertions.assertEquals(Int128.ONE, Int128.valueOf(-6) / Int128.valueOf(-5)) // Round down
-//        Assertions.assertEquals(Int128.MINUS_ONE, Int128.valueOf(-6) / Int128.valueOf(5)) // Rounding to ZERO
-//        Assertions.assertEquals(Int128.MINUS_ONE, Int128.valueOf(6) / Int128.valueOf(-5)) // Rounding to ZERO
-//
-//        Assertions.assertEquals(Int128.valueOf(5), (Int128.valueOf(500) / Int128.valueOf(10)) / Int128.valueOf(10))
+        Assertions.assertThrows(ArithmeticException::class.java) { Int128.MAX_VALUE / Int128.ZERO }
+        Assertions.assertEquals(Int128.ZERO, Int128.ONE / Int128.valueOf(2))
+        Assertions.assertEquals(Int128.MAX_VALUE, Int128.MAX_VALUE / Int128.ONE)
+        Assertions.assertEquals(Int128.ONE, Int128.MAX_VALUE / Int128.MAX_VALUE)
+        Assertions.assertEquals(Int128.valueOf(2), Int128.valueOf(4) / Int128.valueOf(2))
+
+        Assertions.assertEquals(Int128.ONE, Int128.MINUS_ONE / Int128.MINUS_ONE)
+        Assertions.assertEquals(Int128.MINUS_ONE, Int128.ONE / Int128.MINUS_ONE)
+        Assertions.assertEquals(Int128.MINUS_ONE, Int128.MINUS_ONE / Int128.ONE)
+
+        Assertions.assertEquals(Int128.valueOf(2), Int128.valueOf(-4) / Int128.valueOf(-2))
+        Assertions.assertEquals(Int128.valueOf(-2), Int128.valueOf(-4) / Int128.valueOf(2))
+        Assertions.assertEquals(Int128.valueOf(-2), Int128.valueOf(4) / Int128.valueOf(-2))
+
+        Assertions.assertEquals(Int128.ONE, Int128.valueOf(-6) / Int128.valueOf(-5)) // Round down
+        Assertions.assertEquals(Int128.MINUS_ONE, Int128.valueOf(-6) / Int128.valueOf(5)) // Rounding to ZERO
+        Assertions.assertEquals(Int128.MINUS_ONE, Int128.valueOf(6) / Int128.valueOf(-5)) // Rounding to ZERO
+
+        Assertions.assertEquals(Int128.valueOf(5), (Int128.valueOf(500) / Int128.valueOf(10)) / Int128.valueOf(10))
     }
 
     @Test
     fun remInt128() {
-//        Assertions.assertThrows(ArithmeticException::class.java) { Int128.MAX_VALUE % Int128.ZERO }
-//        Assertions.assertEquals(Int128.ONE, Int128.ONE % Int128.valueOf(2))
-//        Assertions.assertEquals(Int128.ONE, Int128.valueOf(3) % Int128.valueOf(2))
-//        Assertions.assertEquals(Int128.ZERO, Int128.MAX_VALUE % Int128.ONE)
-//        Assertions.assertEquals(Int128.ZERO, Int128.MAX_VALUE % Int128.MAX_VALUE)
-//        Assertions.assertEquals(Int128.ZERO, Int128.valueOf(4) % Int128.valueOf(2))
-//        Assertions.assertEquals(Int128.valueOf(4), Int128.valueOf(4) % Int128.valueOf(6))
-//        Assertions.assertEquals(Int128.valueOf(2), Int128.valueOf(6) % Int128.valueOf(4))
-//
-//        Assertions.assertEquals(Int128.ZERO, Int128.MINUS_ONE % Int128.MINUS_ONE)
-//        Assertions.assertEquals(Int128.ZERO, Int128.ONE % Int128.MINUS_ONE)
-//        Assertions.assertEquals(Int128.ZERO, Int128.MINUS_ONE % Int128.ONE)
-//
-//        Assertions.assertEquals(Int128.ZERO, Int128.valueOf(-4) % Int128.valueOf(-2))
-//        Assertions.assertEquals(Int128.ZERO, Int128.valueOf(-4) % Int128.valueOf(2))
-//        Assertions.assertEquals(Int128.ZERO, Int128.valueOf(4) % Int128.valueOf(-2))
-//
-//        Assertions.assertEquals(Int128.MINUS_ONE, Int128.valueOf(-6) % Int128.valueOf(-5)) // Round down
-//        Assertions.assertEquals(Int128.MINUS_ONE, Int128.valueOf(-6) % Int128.valueOf(5)) // Rounding to ZERO
-//        Assertions.assertEquals(Int128.ONE, Int128.valueOf(6) % Int128.valueOf(-5))
-//
-//        Assertions.assertEquals(Int128.valueOf(8), Int128.valueOf(128) % Int128.valueOf(10))
+        Assertions.assertThrows(ArithmeticException::class.java) { Int128.MAX_VALUE % Int128.ZERO }
+        Assertions.assertEquals(Int128.ONE, Int128.ONE % Int128.valueOf(2))
+        Assertions.assertEquals(Int128.ONE, Int128.valueOf(3) % Int128.valueOf(2))
+        Assertions.assertEquals(Int128.ZERO, Int128.MAX_VALUE % Int128.ONE)
+        Assertions.assertEquals(Int128.ZERO, Int128.MAX_VALUE % Int128.MAX_VALUE)
+        Assertions.assertEquals(Int128.ZERO, Int128.valueOf(4) % Int128.valueOf(2))
+        Assertions.assertEquals(Int128.valueOf(4), Int128.valueOf(4) % Int128.valueOf(6))
+        Assertions.assertEquals(Int128.valueOf(2), Int128.valueOf(6) % Int128.valueOf(4))
+
+        Assertions.assertEquals(Int128.ZERO, Int128.MINUS_ONE % Int128.MINUS_ONE)
+        Assertions.assertEquals(Int128.ZERO, Int128.ONE % Int128.MINUS_ONE)
+        Assertions.assertEquals(Int128.ZERO, Int128.MINUS_ONE % Int128.ONE)
+
+        Assertions.assertEquals(Int128.ZERO, Int128.valueOf(-4) % Int128.valueOf(-2))
+        Assertions.assertEquals(Int128.ZERO, Int128.valueOf(-4) % Int128.valueOf(2))
+        Assertions.assertEquals(Int128.ZERO, Int128.valueOf(4) % Int128.valueOf(-2))
+
+        Assertions.assertEquals(Int128.MINUS_ONE, Int128.valueOf(-6) % Int128.valueOf(-5)) // Round down
+        Assertions.assertEquals(Int128.MINUS_ONE, Int128.valueOf(-6) % Int128.valueOf(5)) // Rounding to ZERO
+        Assertions.assertEquals(Int128.ONE, Int128.valueOf(6) % Int128.valueOf(-5))
+
+        Assertions.assertEquals(Int128.valueOf(8), Int128.valueOf(128) % Int128.valueOf(10))
 
         // 18446744073709551616 % 10 == 6
         Assertions.assertEquals(
             UInt128.valueOf(1844674407370955161uL) to UInt128.valueOf(6),
             UInt128.valueOf(1uL, 0uL).divMod(UInt128.valueOf(10))
+        )
+        Assertions.assertEquals(
+            UInt128.valueOf(1844674407370955161uL) to UInt128.valueOf(6),
+            UInt128.valueOf(1uL, 0uL).divMod(10uL)
         )
         Assertions.assertEquals(Int128.valueOf(6), Int128.valueOf(1uL, 0uL) % Int128.valueOf(10))
     }

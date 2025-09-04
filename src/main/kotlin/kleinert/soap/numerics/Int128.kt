@@ -182,8 +182,12 @@ data class Int128(val high: ULong, val low: ULong) : Comparable<Int128>, Number(
         return divResult to remResult
     }
 
+    infix operator fun div(other: Int): Int128 = divMod(valueOf(other)).first
+    infix operator fun div(other: Long): Int128 = divMod(valueOf(other)).first
     infix operator fun div(other: Int128): Int128 =divMod(other).first
 
+    operator fun rem(other: Int): Int128 =divMod(valueOf(other)).second
+    operator fun rem(other: Long): Int128 =divMod(valueOf(other)).second
     operator fun rem(other: Int128): Int128 =divMod(other).second
 
     fun inv(): Int128 = Int128(high.inv(), low.inv())
@@ -276,13 +280,12 @@ data class Int128(val high: ULong, val low: ULong) : Comparable<Int128>, Number(
 
     fun toString(base: Int): String {
         require((base in 2..32) || base == 64) { "Base must be between 2..32 or 64" }
-return "Int128(${high.toString(16)}, ${low.toString(16)})"
-//        if (isNegative()) {
-//            val (hi, lo) = -this
-//            return "-" + UInt128(hi, lo).toString(base)
-//        }
-//        val (hi, lo) = this
-//        return UInt128(hi, lo).toString(base)
+        if (isNegative()) {
+            val (hi, lo) = -this
+            return "-" + UInt128(hi, lo).toString(base)
+        }
+        val (hi, lo) = this
+        return UInt128(hi, lo).toString(base)
     }
 
     override fun toString(): String = toString(10)
